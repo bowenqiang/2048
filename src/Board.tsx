@@ -1,15 +1,19 @@
 import React, { Component } from 'react';
-import { List, fromJS } from 'immutable';
+import { List, fromJS, is } from 'immutable';
 import { TTile, IBoardProps, IBoardStates, KeyBoardKeys } from './App-model';
 import Tile from './Tile';
 import './Board.scss';
 
 class Board extends Component<IBoardProps, IBoardStates> {
     static readonly BOARD_SIZE: number = 4;
+    static readonly WINNING_SCORE: number = 2048;
     constructor(props: IBoardProps) {
         super(props);
         this.state = {
-            board: this.initialBoard()
+            board: this.initialBoard(),
+            maxScore: 0,
+            isGameFinished: false,
+            didLose: false
         };
     }
     render() {
@@ -56,6 +60,15 @@ class Board extends Component<IBoardProps, IBoardStates> {
         document.addEventListener('keydown', this.keyDownHandler, true);
     }
 
+    componentDidUpdate() {
+        if(this.state.maxScore === Board.WINNING_SCORE) {
+            let that = this;
+            setTimeout(() => {
+                alert(`${that.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
+            }, 500);
+        }
+    }
+
     private initialBoard = (): List<List<TTile>> => {
         let board: TTile[][] = this.createEmptyBoard();
         this.generateTiles(board, 2);
@@ -99,7 +112,13 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private keyDownHandler = (e: KeyboardEvent) => {
+        if(this.state.isGameFinished) {
+            alert(`${this.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
+            e.preventDefault();
+            return;
+        }
         const board = this.state.board.toJS();
+        const board_string = JSON.stringify(board);
         switch(e.key) {
             case KeyBoardKeys.ARROWUP:
                 this.moveTilesHelperUp(board);
@@ -114,10 +133,15 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 this.moveTilesHelperRight(board);
                 break;
         }
+        const maxScore: number = this.getCurrentScore(board);
         this.generateTiles(board, 1);
         const newBoard: List<List<TTile>> = fromJS(board);
+        const didLose: boolean = JSON.stringify(board) === board_string;
         this.setState({
-            board: newBoard
+            board: newBoard,
+            maxScore: maxScore,
+            isGameFinished: maxScore === Board.WINNING_SCORE || didLose,
+            didLose: didLose
         });
 
         e.preventDefault();
@@ -246,6 +270,21 @@ class Board extends Component<IBoardProps, IBoardStates> {
             }
         }
     }
+
+    private getCurrentScore = (board: TTile[][]): number => {
+        let score: number = 0;
+        let temp: TTile[] = [];
+        for(let i = 0; i < Board.BOARD_SIZE; i++) {
+            temp.push(board[i].reduce(reducer));
+        }
+
+        return temp.reduce(reducer).val;
+
+        function reducer(accumulator: TTile, currentValue: TTile) {
+            return accumulator.val > currentValue.val ? accumulator : currentValue;
+        }
+    }
+
     
 }
 

@@ -19,6 +19,9 @@ export interface IBoardProps {
 
 export interface IBoardStates {
     board: List<List<TTile>>
+    maxScore: number
+    isGameFinished: boolean
+    didLose: boolean
 }
 
 export interface ITileProps {
