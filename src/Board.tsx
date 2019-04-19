@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { List } from 'immutable';
+import { List, fromJS } from 'immutable';
 import { TTile, IBoardProps, IBoardStates, KeyBoardKeys } from './App-model';
 import Tile from './Tile';
 import './Board.scss';
@@ -13,7 +13,8 @@ class Board extends Component<IBoardProps, IBoardStates> {
         };
     }
     render() {
-        const board = this.state.board;
+        const board = this.state.board.toJS();
+        console.log(board);
         const cells: JSX.Element[] = [];
         for(let i = 0; i < Board.BOARD_SIZE; i++) {
             const cellRow: JSX.Element[] = [];
@@ -30,7 +31,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
         const tiles: JSX.Element[] = [];
         for(let i = 0; i < Board.BOARD_SIZE; i++) {
             for(let j = 0; j < Board.BOARD_SIZE; j++) {
-                const tileData: TTile = board.getIn([i, j]);
+                const tileData: TTile = board[i][j];
                 if(tileData.val !== 0) {
                     tiles.push((
                         <Tile tileData={tileData}></Tile>
@@ -56,39 +57,40 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private initialBoard = (): List<List<TTile>> => {
-        let board: List<List<TTile>> = this.createEmptyBoard();
-        board = this.placeFirstTiles(board);
-        return board;
+        let board: TTile[][] = this.createEmptyBoard();
+        this.generateTiles(board, 2);
+        // console.log(board);
+        // console.log(fromJS(board));
+        return fromJS(board);
     }
 
-    private createEmptyBoard = ():List<List<TTile>> => {
-        let board = List();
+    private createEmptyBoard = ():TTile[][] => {
+        let board: TTile[][] = [];
         for(let i = 0; i < Board.BOARD_SIZE; i++) {
-            let row = List();
-            for(let j = 0; j< Board.BOARD_SIZE; j++) {
-                row = row.push({
+            let row: TTile[] = [];
+            for(let j = 0; j < Board.BOARD_SIZE; j++) {
+                row.push({
                     x: i,
                     y: j,
                     val: 0
                 })
             }
-            board = board.push(row);
+            board.push(row);
         }
         return board;
     }
 
-    private placeFirstTiles = (board: List<List<TTile>>): List<List<TTile>> => {
-        let counter = 9;
+    private generateTiles = (board: TTile[][], num: number): void => {
+        let counter = num;
         while(counter) {
             let x: number = Math.ceil(Math.random() * Board.BOARD_SIZE - 1);
             let y: number = Math.ceil(Math.random() * Board.BOARD_SIZE - 1);
             let val: number = this.generateValue();
-            if(board.getIn([x, y]).val === 0) {
-                board = board.setIn([x, y,], {x: x, y: y, val: val});
+            if(board[x][y].val === 0) {
+                board[x][y] = {x: x, y: y, val: val};
                 counter--;
             }
         }
-        return board;
     }
 
     private generateValue = (): number => {
@@ -97,113 +99,152 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private keyDownHandler = (e: KeyboardEvent) => {
-        const board = this.state.board;
-        let newBoard;
+        const board = this.state.board.toJS();
         switch(e.key) {
             case KeyBoardKeys.ARROWUP:
-                newBoard = this.moveTiles(board, 'up');
-                console.log('up');
-            break;
+                this.moveTilesHelperUp(board);
+                break;
             case KeyBoardKeys.ARROWDOWN:
-            console.log('down');
-            break;
+                this.moveTilesHelperDown(board);
+                break;
             case KeyBoardKeys.ARROWLEFT:
-                newBoard = this.moveTiles(board, 'left');
-                console.log(newBoard);
+                this.moveTilesHelperLeft(board);
                 break;
             case KeyBoardKeys.ARROWRIGHT:
-                newBoard = this.moveTiles(board, 'right')
-                console.log(newBoard);
-            console.log('right');
-            break;
+                this.moveTilesHelperRight(board);
+                break;
         }
+        this.generateTiles(board, 1);
+        const newBoard: List<List<TTile>> = fromJS(board);
+        this.setState({
+            board: newBoard
+        });
+
         e.preventDefault();
     }
 
-    private moveTiles = (board: List<List<TTile>>, direction: string): List<List<TTile>> => {
-        let newBoard:List<List<TTile>> = List();
-        if (direction.toLowerCase() === 'left' || direction.toLowerCase() === 'right') {
-            for(let i = 0; i < Board.BOARD_SIZE; i++) {
-                const row = (board.get(i) as List<TTile>).toArray();
-                const newRow: List<TTile> = direction.toLowerCase() === 'left' ? List(this.moveTilesHelperLeft(row)) : List(this.moveTilesHelperRight(row));
-                newBoard = newBoard.push(newRow);
-            }
-        } else {
-            // for(let i = 0; i < Board.BOARD_SIZE; i++) {
-            //     const row_temp = List();
-            //     for(let i)
-            // }
-            console.log(board.toArray());
-        }
-
-        return newBoard;
-    }
-
-    private moveTilesHelperLeft = (arr: Array<TTile>): Array<TTile> => {
-        const newArr = [...arr];
-        for(let i = 1, j = 0; i < newArr.length; i++) {
-            if(newArr[i].val === 0) {
-                continue;
-            }
-
-            if(newArr[j].val === 0) {
-                newArr[j].val = newArr[i].val;
-                newArr[i].val = 0;
-                continue;
-            }
-            if(newArr[j].val === newArr[i].val) {
-                newArr[j].val = newArr[j].val * 2;
-                newArr[i].val = 0;
-                continue;
-            }
-            if(newArr[j].val !== newArr[i].val) {
-                j++;
-                if(j === i) {
+    private moveTilesHelperLeft = (board: TTile[][]): void => {
+        for(let row_idx = 0; row_idx < Board.BOARD_SIZE; row_idx++){           
+            for(let i = 1, j = 0; i < Board.BOARD_SIZE; i++) {
+                if(board[row_idx][i].val === 0) {
                     continue;
-                } else {
-                    newArr[j].val = newArr[i].val;
-                    newArr[i].val = 0;
+                }
+
+                if(board[row_idx][j].val === 0) {
+                    board[row_idx][j].val = board[row_idx][i].val;
+                    board[row_idx][i].val = 0;
                     continue;
+                }
+                if(board[row_idx][j].val === board[row_idx][i].val) {
+                    board[row_idx][j].val = board[row_idx][j].val * 2;
+                    board[row_idx][i].val = 0;
+                    continue;
+                }
+                if(board[row_idx][j].val !== board[row_idx][i].val) {
+                    j++;
+                    if(j === i) {
+                        continue;
+                    } else {
+                        board[row_idx][j].val = board[row_idx][i].val;
+                        board[row_idx][i].val = 0;
+                        continue;
+                    }
                 }
             }
         }
-        return newArr;
     }
 
-    private moveTilesHelperRight = (arr: Array<TTile>): Array<TTile> => {
-        const newArr = [...arr];
-        for(let i = newArr.length - 2, j = newArr.length -1; i >= 0; i--) {
-            if(newArr[i].val === 0) {
-                continue;
-            }
+    private moveTilesHelperRight = (board: TTile[][]): void => {
+        for(let row_idx = 0; row_idx < Board.BOARD_SIZE; row_idx++){           
+            for(let i = Board.BOARD_SIZE - 2, j = Board.BOARD_SIZE -1; i >= 0; i--) {
+                if(board[row_idx][i].val === 0) {
+                    continue;
+                }
 
-            if(newArr[j].val === 0) {
-                newArr[j].val = newArr[i].val;
-                newArr[i].val = 0;
-                continue;
-            }
-            if(newArr[j].val === newArr[i].val) {
-                newArr[j].val = newArr[j].val * 2;
-                newArr[i].val = 0;
-                continue;
-            }
-            if(newArr[j].val !== newArr[i].val) {
-                j--;
-                if(j === i) {
+                if(board[row_idx][j].val === 0) {
+                    board[row_idx][j].val = board[row_idx][i].val;
+                    board[row_idx][i].val = 0;
                     continue;
-                } else {
-                    newArr[j].val = newArr[i].val;
-                    newArr[i].val = 0;
+                }
+                if(board[row_idx][j].val === board[row_idx][i].val) {
+                    board[row_idx][j].val = board[row_idx][j].val * 2;
+                    board[row_idx][i].val = 0;
                     continue;
+                }
+                if(board[row_idx][j].val !== board[row_idx][i].val) {
+                    j--;
+                    if(j === i) {
+                        continue;
+                    } else {
+                        board[row_idx][j].val = board[row_idx][i].val;
+                        board[row_idx][i].val = 0;
+                        continue;
+                    }
                 }
             }
         }
-        return newArr;
     }
 
-    private moveTitleHelperUp = (arr: Array<TTile>): Array<TTile> => {
-        const newArr = [...arr];
-        return newArr;
+    private moveTilesHelperUp = (board: TTile[][]): void => {
+        for(let col_idx = 0; col_idx < Board.BOARD_SIZE; col_idx++){           
+            for(let i = 1, j = 0; i < Board.BOARD_SIZE; i++) {
+                if(board[i][col_idx].val === 0) {
+                    continue;
+                }
+
+                if(board[j][col_idx].val === 0) {
+                    board[j][col_idx].val = board[i][col_idx].val;
+                    board[i][col_idx].val = 0;
+                    continue;
+                }
+                if(board[j][col_idx].val === board[i][col_idx].val) {
+                    board[j][col_idx].val = board[j][col_idx].val * 2;
+                    board[i][col_idx].val = 0;
+                    continue;
+                }
+                if(board[j][col_idx].val !== board[i][col_idx].val) {
+                    j++;
+                    if(j === i) {
+                        continue;
+                    } else {
+                        board[j][col_idx].val = board[i][col_idx].val;
+                        board[i][col_idx].val = 0;
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    private moveTilesHelperDown = (board: TTile[][]): void => {
+        for(let col_idx = 0; col_idx < Board.BOARD_SIZE; col_idx++){           
+            for(let i = Board.BOARD_SIZE - 2, j = Board.BOARD_SIZE -1; i >= 0; i--) {
+                if(board[i][col_idx].val === 0) {
+                    continue;
+                }
+
+                if(board[j][col_idx].val === 0) {
+                    board[j][col_idx].val = board[i][col_idx].val;
+                    board[i][col_idx].val = 0;
+                    continue;
+                }
+                if(board[j][col_idx].val === board[i][col_idx].val) {
+                    board[j][col_idx].val = board[j][col_idx].val * 2;
+                    board[i][col_idx].val = 0;
+                    continue;
+                }
+                if(board[j][col_idx].val !== board[i][col_idx].val) {
+                    j--;
+                    if(j === i) {
+                        continue;
+                    } else {
+                        board[j][col_idx].val = board[i][col_idx].val;
+                        board[i][col_idx].val = 0;
+                        continue;
+                    }
+                }
+            }
+        }
     }
     
 }
