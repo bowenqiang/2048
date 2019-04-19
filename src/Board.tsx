@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { List, fromJS, is } from 'immutable';
-import { TTile, IBoardProps, IBoardStates, KeyBoardKeys } from './App-model';
+import { TTile, IBoardProps, IBoardStates, KeyBoardKeys, TNextMoves } from './App-model';
 import Tile from './Tile';
 import './Board.scss';
 
@@ -44,9 +44,9 @@ class Board extends Component<IBoardProps, IBoardStates> {
             }
         }
 
-
         return (
             <div className='board'>
+                <div className='current-score'>Score: {this.state.maxScore}</div>
                 {cells}
                 <div className='tile-container'>
                     {tiles}
@@ -56,12 +56,14 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     componentDidMount() {
-        // this.initialBoard();
         document.addEventListener('keydown', this.keyDownHandler, true);
+        this.setState({
+            maxScore: this.getCurrentScore(this.state.board.toJS())
+        });
     }
 
     componentDidUpdate() {
-        if(this.state.maxScore === Board.WINNING_SCORE) {
+        if(this.state.isGameFinished) {
             let that = this;
             setTimeout(() => {
                 alert(`${that.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
@@ -71,9 +73,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     private initialBoard = (): List<List<TTile>> => {
         let board: TTile[][] = this.createEmptyBoard();
-        this.generateTiles(board, 2);
-        // console.log(board);
-        // console.log(fromJS(board));
+        this.generateTiles(board, 15);
         return fromJS(board);
     }
 
@@ -95,7 +95,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     private generateTiles = (board: TTile[][], num: number): void => {
         let counter = num;
-        while(counter) {
+        while(counter && this.getTilesNum(board) !== 16) {
             let x: number = Math.ceil(Math.random() * Board.BOARD_SIZE - 1);
             let y: number = Math.ceil(Math.random() * Board.BOARD_SIZE - 1);
             let val: number = this.generateValue();
@@ -107,8 +107,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private generateValue = (): number => {
-        // return Math.random() > 0.5 ? 4 : 2;
-        return 2;
+        return Math.random() > 0.8 ? 4 : 2;
     }
 
     private keyDownHandler = (e: KeyboardEvent) => {
@@ -117,162 +116,177 @@ class Board extends Component<IBoardProps, IBoardStates> {
             e.preventDefault();
             return;
         }
-        const board = this.state.board.toJS();
-        const board_string = JSON.stringify(board);
+        let board = this.state.board.toJS();
+        const nextPossibleMoves: TNextMoves = this.nextPossibleMoves(board);
+        if (!nextPossibleMoves.up && !nextPossibleMoves.down && !nextPossibleMoves.left && !nextPossibleMoves.right) {
+            this.setState({
+                isGameFinished: true,
+                didLose: true
+            })
+            e.preventDefault();
+            return;
+        }
+
         switch(e.key) {
             case KeyBoardKeys.ARROWUP:
-                this.moveTilesHelperUp(board);
+                board = nextPossibleMoves.up ? nextPossibleMoves.up : board;
                 break;
             case KeyBoardKeys.ARROWDOWN:
-                this.moveTilesHelperDown(board);
+                board = nextPossibleMoves.down ? nextPossibleMoves.down : board;
                 break;
             case KeyBoardKeys.ARROWLEFT:
-                this.moveTilesHelperLeft(board);
+                board = nextPossibleMoves.left ? nextPossibleMoves.left : board;
                 break;
             case KeyBoardKeys.ARROWRIGHT:
-                this.moveTilesHelperRight(board);
+                board = nextPossibleMoves.right ? nextPossibleMoves.right : board;
                 break;
         }
         const maxScore: number = this.getCurrentScore(board);
         this.generateTiles(board, 1);
         const newBoard: List<List<TTile>> = fromJS(board);
-        const didLose: boolean = JSON.stringify(board) === board_string;
+
         this.setState({
             board: newBoard,
             maxScore: maxScore,
-            isGameFinished: maxScore === Board.WINNING_SCORE || didLose,
-            didLose: didLose
+            isGameFinished: maxScore === Board.WINNING_SCORE
         });
 
         e.preventDefault();
     }
 
-    private moveTilesHelperLeft = (board: TTile[][]): void => {
+    private moveTilesHelperLeft = (board: TTile[][]): TTile[][] => {
+        const newBoard = JSON.parse(JSON.stringify(board));
         for(let row_idx = 0; row_idx < Board.BOARD_SIZE; row_idx++){           
             for(let i = 1, j = 0; i < Board.BOARD_SIZE; i++) {
-                if(board[row_idx][i].val === 0) {
+                if(newBoard[row_idx][i].val === 0) {
                     continue;
                 }
 
-                if(board[row_idx][j].val === 0) {
-                    board[row_idx][j].val = board[row_idx][i].val;
-                    board[row_idx][i].val = 0;
+                if(newBoard[row_idx][j].val === 0) {
+                    newBoard[row_idx][j].val = newBoard[row_idx][i].val;
+                    newBoard[row_idx][i].val = 0;
                     continue;
                 }
-                if(board[row_idx][j].val === board[row_idx][i].val) {
-                    board[row_idx][j].val = board[row_idx][j].val * 2;
-                    board[row_idx][i].val = 0;
+                if(newBoard[row_idx][j].val === newBoard[row_idx][i].val) {
+                    newBoard[row_idx][j].val = newBoard[row_idx][j].val * 2;
+                    newBoard[row_idx][i].val = 0;
                     continue;
                 }
-                if(board[row_idx][j].val !== board[row_idx][i].val) {
+                if(newBoard[row_idx][j].val !== newBoard[row_idx][i].val) {
                     j++;
                     if(j === i) {
                         continue;
                     } else {
-                        board[row_idx][j].val = board[row_idx][i].val;
-                        board[row_idx][i].val = 0;
+                        newBoard[row_idx][j].val = newBoard[row_idx][i].val;
+                        newBoard[row_idx][i].val = 0;
                         continue;
                     }
                 }
             }
         }
+        return newBoard;
     }
 
-    private moveTilesHelperRight = (board: TTile[][]): void => {
+    private moveTilesHelperRight = (board: TTile[][]): TTile[][] => {
+        const newBoard = JSON.parse(JSON.stringify(board));
         for(let row_idx = 0; row_idx < Board.BOARD_SIZE; row_idx++){           
             for(let i = Board.BOARD_SIZE - 2, j = Board.BOARD_SIZE -1; i >= 0; i--) {
-                if(board[row_idx][i].val === 0) {
+                if(newBoard[row_idx][i].val === 0) {
                     continue;
                 }
 
-                if(board[row_idx][j].val === 0) {
-                    board[row_idx][j].val = board[row_idx][i].val;
-                    board[row_idx][i].val = 0;
+                if(newBoard[row_idx][j].val === 0) {
+                    newBoard[row_idx][j].val = newBoard[row_idx][i].val;
+                    newBoard[row_idx][i].val = 0;
                     continue;
                 }
-                if(board[row_idx][j].val === board[row_idx][i].val) {
-                    board[row_idx][j].val = board[row_idx][j].val * 2;
-                    board[row_idx][i].val = 0;
+                if(newBoard[row_idx][j].val === newBoard[row_idx][i].val) {
+                    newBoard[row_idx][j].val = newBoard[row_idx][j].val * 2;
+                    newBoard[row_idx][i].val = 0;
                     continue;
                 }
-                if(board[row_idx][j].val !== board[row_idx][i].val) {
+                if(newBoard[row_idx][j].val !== newBoard[row_idx][i].val) {
                     j--;
                     if(j === i) {
                         continue;
                     } else {
-                        board[row_idx][j].val = board[row_idx][i].val;
-                        board[row_idx][i].val = 0;
+                        newBoard[row_idx][j].val = newBoard[row_idx][i].val;
+                        newBoard[row_idx][i].val = 0;
                         continue;
                     }
                 }
             }
         }
+        return newBoard;
     }
 
-    private moveTilesHelperUp = (board: TTile[][]): void => {
+    private moveTilesHelperUp = (board: TTile[][]): TTile[][] => {
+        const newBoard = JSON.parse(JSON.stringify(board));
         for(let col_idx = 0; col_idx < Board.BOARD_SIZE; col_idx++){           
             for(let i = 1, j = 0; i < Board.BOARD_SIZE; i++) {
-                if(board[i][col_idx].val === 0) {
+                if(newBoard[i][col_idx].val === 0) {
                     continue;
                 }
 
-                if(board[j][col_idx].val === 0) {
-                    board[j][col_idx].val = board[i][col_idx].val;
-                    board[i][col_idx].val = 0;
+                if(newBoard[j][col_idx].val === 0) {
+                    newBoard[j][col_idx].val = newBoard[i][col_idx].val;
+                    newBoard[i][col_idx].val = 0;
                     continue;
                 }
-                if(board[j][col_idx].val === board[i][col_idx].val) {
-                    board[j][col_idx].val = board[j][col_idx].val * 2;
-                    board[i][col_idx].val = 0;
+                if(newBoard[j][col_idx].val === newBoard[i][col_idx].val) {
+                    newBoard[j][col_idx].val = newBoard[j][col_idx].val * 2;
+                    newBoard[i][col_idx].val = 0;
                     continue;
                 }
-                if(board[j][col_idx].val !== board[i][col_idx].val) {
+                if(newBoard[j][col_idx].val !== newBoard[i][col_idx].val) {
                     j++;
                     if(j === i) {
                         continue;
                     } else {
-                        board[j][col_idx].val = board[i][col_idx].val;
-                        board[i][col_idx].val = 0;
+                        newBoard[j][col_idx].val = newBoard[i][col_idx].val;
+                        newBoard[i][col_idx].val = 0;
                         continue;
                     }
                 }
             }
         }
+        return newBoard;
     }
 
-    private moveTilesHelperDown = (board: TTile[][]): void => {
+    private moveTilesHelperDown = (board: TTile[][]): TTile[][] => {
+        const newBoard = JSON.parse(JSON.stringify(board));
         for(let col_idx = 0; col_idx < Board.BOARD_SIZE; col_idx++){           
             for(let i = Board.BOARD_SIZE - 2, j = Board.BOARD_SIZE -1; i >= 0; i--) {
-                if(board[i][col_idx].val === 0) {
+                if(newBoard[i][col_idx].val === 0) {
                     continue;
                 }
 
-                if(board[j][col_idx].val === 0) {
-                    board[j][col_idx].val = board[i][col_idx].val;
-                    board[i][col_idx].val = 0;
+                if(newBoard[j][col_idx].val === 0) {
+                    newBoard[j][col_idx].val = newBoard[i][col_idx].val;
+                    newBoard[i][col_idx].val = 0;
                     continue;
                 }
-                if(board[j][col_idx].val === board[i][col_idx].val) {
-                    board[j][col_idx].val = board[j][col_idx].val * 2;
-                    board[i][col_idx].val = 0;
+                if(newBoard[j][col_idx].val === newBoard[i][col_idx].val) {
+                    newBoard[j][col_idx].val = newBoard[j][col_idx].val * 2;
+                    newBoard[i][col_idx].val = 0;
                     continue;
                 }
-                if(board[j][col_idx].val !== board[i][col_idx].val) {
+                if(newBoard[j][col_idx].val !== newBoard[i][col_idx].val) {
                     j--;
                     if(j === i) {
                         continue;
                     } else {
-                        board[j][col_idx].val = board[i][col_idx].val;
-                        board[i][col_idx].val = 0;
+                        newBoard[j][col_idx].val = newBoard[i][col_idx].val;
+                        newBoard[i][col_idx].val = 0;
                         continue;
                     }
                 }
             }
         }
+        return newBoard;
     }
 
     private getCurrentScore = (board: TTile[][]): number => {
-        let score: number = 0;
         let temp: TTile[] = [];
         for(let i = 0; i < Board.BOARD_SIZE; i++) {
             temp.push(board[i].reduce(reducer));
@@ -285,7 +299,32 @@ class Board extends Component<IBoardProps, IBoardStates> {
         }
     }
 
-    
+    private getTilesNum = (board: TTile[][]): number => {
+        let num: number = 0;
+        for(let i = 0; i < Board.BOARD_SIZE; i++) {
+            for(let j = 0; j < Board.BOARD_SIZE; j++) {
+                if(board[i][j].val > 0) {
+                    num++;
+                }
+            }
+        }
+        return num;
+    }
+
+    private nextPossibleMoves = (board: TTile[][]): TNextMoves => {
+        const result = {};
+        const board_stringfy = JSON.stringify(board);
+        const upMove: TTile[][] = this.moveTilesHelperUp(board);
+        const downMove: TTile[][] = this.moveTilesHelperDown(board);
+        const leftMove: TTile[][] = this.moveTilesHelperLeft(board);
+        const rightMove: TTile[][] = this.moveTilesHelperRight(board);
+        return {
+            up: JSON.stringify(upMove) === board_stringfy ? null : upMove,
+            down: JSON.stringify(downMove) === board_stringfy ? null : downMove,
+            left: JSON.stringify(leftMove) === board_stringfy ? null : leftMove,
+            right: JSON.stringify(rightMove) === board_stringfy ? null : rightMove, 
+        }
+    }
 }
 
 export default Board;

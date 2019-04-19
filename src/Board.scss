@@ -4,6 +4,13 @@
     padding: 7px;
     margin: 0 auto;
     border-radius: 5px;
+
+    .current-score {
+        height: 50px;
+        font-size: 48px;
+        font-weight: bold;
+        line-height: 50px;
+    }
     .cell {
         width: 100px;
         height: 100px;

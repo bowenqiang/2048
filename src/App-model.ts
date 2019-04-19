@@ -6,6 +6,13 @@ export type TTile = {
     val: number
 }
 
+export type TNextMoves = {
+    up: TTile[][] | null,
+    down: TTile[][] | null,
+    left: TTile[][] | null,
+    right: TTile[][] | null
+}
+
 export enum KeyBoardKeys {
     ARROWUP = 'ArrowUp',
     ARROWDOWN = 'ArrowDown',
