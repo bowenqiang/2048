@@ -1,7 +1,9 @@
 import { List } from 'immutable';
 
 export type TCell = {
-    val: number;
+    x: number,
+    y: number,
+    val: number
 }
 
 export interface IBoardProps {
@@ -10,4 +12,12 @@ export interface IBoardProps {
 
 export interface IBoardStates {
     board: List<TCell>
+}
+
+export interface ICellProps {
+    cellData: TCell
+}
+
+export interface ICellStates {
+
 }

@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { List } from 'immutable';
-import { TCell, IBoardProps, IBoardStates } from './App-model'
+import { TCell, IBoardProps, IBoardStates } from './App-model';
+import Cell from './Cell';
+import './Board.scss';
 
 
 
@@ -9,12 +11,31 @@ class Board extends Component<IBoardProps, IBoardStates> {
     constructor(props: IBoardProps) {
         super(props);
         this.state = {
-            board: List()
+            board: this.initialBoard()
         };
     }
     render() {
+        const board = this.state.board;
+        const cells: JSX.Element[] = [];
+        for(let i = 0; i < Board.BOARD_SIZE; i++) {
+            const cellRow: JSX.Element[] = [];
+            for(let j = 0; j < Board.BOARD_SIZE; j++) {
+                cellRow.push((
+                    <Cell
+                        key={i * Board.BOARD_SIZE + j}
+                        cellData={board.getIn([i,j])}
+                    ></Cell>
+                ));
+            }
+            cells.push((
+                <div className='cell-row' key={i}>{cellRow}</div>
+            ));
+        }
+
         return (
-            <div className='board'>board</div>
+            <div className='board'>
+                {cells}       
+            </div>
         );
     }
 
@@ -22,15 +43,14 @@ class Board extends Component<IBoardProps, IBoardStates> {
         this.initialBoard();
     }
 
-    private initialBoard = (): void => {
+    private initialBoard = (): List<TCell> => {
         let board: List<TCell> = this.createEmptyBoard();
         board = this.placeFirstCells(board);
 
 
 
 
-
-        console.log(board);
+        return board;
     }
 
     private createEmptyBoard = ():List<TCell> => {
@@ -39,6 +59,8 @@ class Board extends Component<IBoardProps, IBoardStates> {
             let row = List();
             for(let j = 0; j< Board.BOARD_SIZE; j++) {
                 row = row.push({
+                    x: i,
+                    y: j,
                     val: 0
                 })
             }
@@ -54,7 +76,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
             let y: number = Math.ceil(Math.random() * (Board.BOARD_SIZE - 1));
             let val: number = this.generateValue();
             if(board.getIn([x, y]).val === 0) {
-                board = board.setIn([x, y], {val: val});
+                board = board.setIn([x, y,], {x: x, y: y, val: val});
                 counter--;
             }
         }

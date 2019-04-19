@@ -9,7 +9,7 @@ class App extends Component {
         <header className="App-header">
           <h1>2048</h1>
         </header>
-        <section>
+        <section className="App-section">
           <Board></Board>
         </section>
       </div>
