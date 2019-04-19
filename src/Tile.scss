@@ -1,18 +1,16 @@
-.cell {
+.tile {
     width: 100px;
     height: 100px;
     margin: 7px 7px 7px 7px;
     border-radius: 5px;
     font-size: 64px;
     inline-size: 100px;
-    float: left;
+    // float: left;
     color: #766e65;
     font-weight: bold;
-    &.empty {
-        background-color: #cdc1b6;
-    }
-
-    &.has-val {
-        background-color: #eee4da;
-    }
+    background-color: #eee4da;
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
 }
