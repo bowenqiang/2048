@@ -46,7 +46,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 const tileData: TTile = board[i][j];
                 if(tileData.val !== 0) {
                     tiles.push((
-                        <Tile tileData={tileData}></Tile>
+                        <Tile tileData={tileData} key={Board.BOARD_SIZE * i + j}></Tile>
                     ));
                 }
             }
@@ -325,7 +325,6 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private nextPossibleMoves = (board: TTile[][]): TNextMoves => {
-        const result = {};
         const board_stringfy = JSON.stringify(board);
         const upMove: TTile[][] = this.moveTilesHelperUp(board);
         const downMove: TTile[][] = this.moveTilesHelperDown(board);
@@ -339,14 +338,14 @@ class Board extends Component<IBoardProps, IBoardStates> {
         }
     }
 
-    private touchStart = (e: TouchEvent) => {
+    private touchStart = (e: TouchEvent): void => {
         const touchObj: Touch = e.changedTouches[0];
         this._touchObj.startX = touchObj.pageX;
         this._touchObj.startY = touchObj.pageY;
         this._touchObj.startTime = e.timeStamp;
     }
 
-    private touchEnd = (e: TouchEvent) => {
+    private touchEnd = (e: TouchEvent): void => {
         let swipeDir: string = '';
         const touchObj: Touch = e.changedTouches[0];
         this._touchObj.distX = touchObj.pageX - this._touchObj.startX;
