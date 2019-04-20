@@ -389,6 +389,8 @@ class Board extends Component<IBoardProps, IBoardStates> {
             case TouchDirection.SWIPERIGHT:
                 board = nextPossibleMoves.right ? nextPossibleMoves.right : board;
                 break;
+            default:
+                return;
         }
         const maxScore: number = this.getCurrentScore(board);
         this.generateTiles(board, 1);
