@@ -56,6 +56,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
             <div className='board'>
                 <div className='header-container'>
                     <span className='current-score'>Score: {this.state.maxScore}</span>
+                    <br></br>
                     <button className='game-btn new-game-btn' onClick={this.newGame}>New Game</button>
                 </div>
                 <div className='cell-container'>
@@ -129,7 +130,8 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private generateValue = (): number => {
-        return Math.random() > 0.8 ? 4 : 2;
+        // return Math.random() > 0.8 ? 4 : 2;
+        return 1000;
     }
 
     private keyDownHandler = (e: KeyboardEvent): void => {

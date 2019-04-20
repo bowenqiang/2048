@@ -6,7 +6,6 @@
     border-radius: 5px;
 
     .header-container {
-        line-height: 50px;
         margin-bottom: 10px;
         .current-score {
             height: 50px;
@@ -55,7 +54,7 @@
 
 @media only screen and (max-width: 480px) {
     .board {
-        padding: 3px 3px 7px 7px;
+        padding: 3px 3px 3px 3px;
         margin: 0 auto;
         border-radius: 2px;
         
