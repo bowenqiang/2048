@@ -130,8 +130,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private generateValue = (): number => {
-        // return Math.random() > 0.8 ? 4 : 2;
-        return 1000;
+        return Math.random() > 0.8 ? 4 : 2;
     }
 
     private keyDownHandler = (e: KeyboardEvent): void => {
