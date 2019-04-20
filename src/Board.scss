@@ -28,3 +28,20 @@
         position: relative;
     }
 }
+
+@media only screen and (max-width: 480px) {
+    .board {
+        padding: 3px;
+        margin: 0 auto;
+        border-radius: 2px;
+    
+        .cell {
+            width: 75px;
+            height: 75px;
+            margin: 3px 3px 3px 3px;
+            border-radius: 5px;
+            font-size: 64px;
+            inline-size: 75px;
+        }
+    }
+}

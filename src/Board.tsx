@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
 import { List, fromJS, is } from 'immutable';
-import { TTile, IBoardProps, IBoardStates, KeyBoardKeys, TNextMoves } from './App-model';
+import { TTile, IBoardProps, IBoardStates, KeyBoardKeys, TNextMoves, TouchDirection } from './App-model';
 import Tile from './Tile';
 import './Board.scss';
 
 class Board extends Component<IBoardProps, IBoardStates> {
     static readonly BOARD_SIZE: number = 4;
     static readonly WINNING_SCORE: number = 2048;
+    private _touchObj = {
+        startX: 0,
+        startY: 0,
+        distX: 0,
+        distY: 0,
+        threshold: 50,
+        startTime: 0,
+        allowedTime: 1000
+    }
     constructor(props: IBoardProps) {
         super(props);
         this.state = {
@@ -18,7 +27,6 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
     render() {
         const board = this.state.board.toJS();
-        console.log(board);
         const cells: JSX.Element[] = [];
         for(let i = 0; i < Board.BOARD_SIZE; i++) {
             const cellRow: JSX.Element[] = [];
@@ -57,6 +65,11 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     componentDidMount() {
         document.addEventListener('keydown', this.keyDownHandler, true);
+        document.addEventListener('touchstart', this.touchStart, true);
+        document.addEventListener('touchend', this.touchEnd, true);
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault()
+        }, {passive: false});
         this.setState({
             maxScore: this.getCurrentScore(this.state.board.toJS())
         });
@@ -73,7 +86,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     private initialBoard = (): List<List<TTile>> => {
         let board: TTile[][] = this.createEmptyBoard();
-        this.generateTiles(board, 15);
+        this.generateTiles(board, 2);
         return fromJS(board);
     }
 
@@ -110,7 +123,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
         return Math.random() > 0.8 ? 4 : 2;
     }
 
-    private keyDownHandler = (e: KeyboardEvent) => {
+    private keyDownHandler = (e: KeyboardEvent): void => {
         if(this.state.isGameFinished) {
             alert(`${this.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
             e.preventDefault();
@@ -324,6 +337,69 @@ class Board extends Component<IBoardProps, IBoardStates> {
             left: JSON.stringify(leftMove) === board_stringfy ? null : leftMove,
             right: JSON.stringify(rightMove) === board_stringfy ? null : rightMove, 
         }
+    }
+
+    private touchStart = (e: TouchEvent) => {
+        const touchObj: Touch = e.changedTouches[0];
+        this._touchObj.startX = touchObj.pageX;
+        this._touchObj.startY = touchObj.pageY;
+        this._touchObj.startTime = e.timeStamp;
+    }
+
+    private touchEnd = (e: TouchEvent) => {
+        let swipeDir: string = '';
+        const touchObj: Touch = e.changedTouches[0];
+        this._touchObj.distX = touchObj.pageX - this._touchObj.startX;
+        this._touchObj.distY = touchObj.pageY - this._touchObj.startY;
+        const dist: number = Math.sqrt(this._touchObj.distX * this._touchObj.distX + this._touchObj.distY * this._touchObj.distY);
+        if((e.timeStamp - this._touchObj.startTime) <= this._touchObj.allowedTime && dist >= this._touchObj.threshold) {
+            if(Math.abs(this._touchObj.distX) > Math.abs(this._touchObj.distY)) {
+                swipeDir = this._touchObj.distX > 0 ? TouchDirection.SWIPERIGHT : TouchDirection.SWIPELEFT;
+            } else {
+                swipeDir = this._touchObj.distY > 0 ? TouchDirection.SWIPEDOWN : TouchDirection.SWIPEUP;
+            }
+        }
+        this.touchHandler(swipeDir);
+    }
+
+    private touchHandler = (direction: string) => {
+        if(this.state.isGameFinished) {
+            alert(`${this.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
+            return;
+        }
+        let board = this.state.board.toJS();
+        const nextPossibleMoves: TNextMoves = this.nextPossibleMoves(board);
+        if (!nextPossibleMoves.up && !nextPossibleMoves.down && !nextPossibleMoves.left && !nextPossibleMoves.right) {
+            this.setState({
+                isGameFinished: true,
+                didLose: true
+            })
+            return;
+        }
+
+        switch(direction) {
+            case TouchDirection.SWIPEUP:
+                board = nextPossibleMoves.up ? nextPossibleMoves.up : board;
+                break;
+            case TouchDirection.SWIPEDOWN:
+                board = nextPossibleMoves.down ? nextPossibleMoves.down : board;
+                break;
+            case TouchDirection.SWIPELEFT:
+                board = nextPossibleMoves.left ? nextPossibleMoves.left : board;
+                break;
+            case TouchDirection.SWIPERIGHT:
+                board = nextPossibleMoves.right ? nextPossibleMoves.right : board;
+                break;
+        }
+        const maxScore: number = this.getCurrentScore(board);
+        this.generateTiles(board, 1);
+        const newBoard: List<List<TTile>> = fromJS(board);
+
+        this.setState({
+            board: newBoard,
+            maxScore: maxScore,
+            isGameFinished: maxScore === Board.WINNING_SCORE
+        });
     }
 }
 

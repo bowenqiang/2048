@@ -20,6 +20,13 @@ export enum KeyBoardKeys {
     ARROWRIGHT = 'ArrowRight'
 }
 
+export enum TouchDirection {
+    SWIPEUP = 'SwipeUp',
+    SWIPEDOWN = 'SwipeDown',
+    SWIPELEFT = 'SwipeLeft',
+    SWIPERIGHT = 'SwipeRight'
+}
+
 export interface IBoardProps {
 
 }
