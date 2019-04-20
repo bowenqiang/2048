@@ -12,5 +12,5 @@ This is a small 2048 game reacted with ReactJS
 1. Add animation
 
 ## Known Issue
-Not support iphoe 5/SE or smaller screen device
+Not support iphone 5/SE or smaller screen device
 
