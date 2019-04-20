@@ -5,8 +5,8 @@ This is a small 2048 game reacted with ReactJS
 2. run "Yarn start"
 
 ## Key Feature
-support keyboard
-support touch screen
+1. support keyboard
+2. support touch screen
 
 ## Known Issue
 Not support iphoe 5/SE or smaller screen device
