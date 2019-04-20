@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { List, fromJS, is } from 'immutable';
+import { List, fromJS } from 'immutable';
 import { TTile, IBoardProps, IBoardStates, KeyBoardKeys, TNextMoves, TouchDirection } from './App-model';
 import Tile from './Tile';
 import './Board.scss';
@@ -67,7 +67,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 </div>
                 {
                     this.state.isGameFinished ? <button className='game-btn try-again-btn' onClick={this.newGame}>Try Again</button> : ''
-                }     
+                } 
             </div>
         );
     }
