@@ -58,7 +58,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
                     <span className='current-score'>Score: {this.state.maxScore}</span>
                     <button className='game-btn new-game-btn' onClick={this.newGame}>New Game</button>
                 </div>
-                <div className='cell-ontainer'>
+                <div className='cell-container'>
                     {cells}
                 </div>
                 
