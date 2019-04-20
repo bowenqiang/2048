@@ -54,11 +54,20 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
         return (
             <div className='board'>
-                <div className='current-score'>Score: {this.state.maxScore}</div>
-                {cells}
+                <div className='header-container'>
+                    <span className='current-score'>Score: {this.state.maxScore}</span>
+                    <button className='game-btn new-game-btn' onClick={this.newGame}>New Game</button>
+                </div>
+                <div className='cell-ontainer'>
+                    {cells}
+                </div>
+                
                 <div className='tile-container'>
                     {tiles}
-                </div>       
+                </div>
+                {
+                    this.state.isGameFinished ? <button className='game-btn try-again-btn' onClick={this.newGame}>Try Again</button> : ''
+                }     
             </div>
         );
     }
@@ -400,6 +409,15 @@ class Board extends Component<IBoardProps, IBoardStates> {
             board: newBoard,
             maxScore: maxScore,
             isGameFinished: maxScore === Board.WINNING_SCORE
+        });
+    }
+
+    private newGame = (): void => {
+        this.setState({
+            board: this.initialBoard(),
+            maxScore: 0,
+            isGameFinished: false,
+            didLose: false
         });
     }
 }
