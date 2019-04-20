@@ -8,6 +8,9 @@ This is a small 2048 game reacted with ReactJS
 1. support keyboard
 2. support touch screen
 
+## Todo
+1. Add animation
+
 ## Known Issue
 Not support iphoe 5/SE or smaller screen device
 
