@@ -13,4 +13,4 @@ This is a small 2048 game reacted with ReactJS
 
 ## Known Issue
 Not support iphone 5/SE or smaller screen device
-
+Not support landscape
