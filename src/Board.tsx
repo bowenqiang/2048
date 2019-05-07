@@ -372,7 +372,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private touchHandler = (direction: string) => {
-        if(this.state.isGameFinished) {
+        if(this.state.isGameFinished && direction !== '') {
             alert(`${this.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
             return;
         }
