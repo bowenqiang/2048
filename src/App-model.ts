@@ -45,3 +45,17 @@ export interface ITileProps {
 export interface ITileStates {
 
 }
+
+export type TMovement = {
+    oldX: number
+    oldY: number
+    newX: number
+    newY: number
+}
+
+export type TMovements = {
+    left: TMovement[]
+    right: TMovement[]
+    up: TMovement[]
+    down: TMovement[]
+}

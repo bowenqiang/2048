@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { List, fromJS } from 'immutable';
-import { TTile, IBoardProps, IBoardStates, KeyBoardKeys, TNextMoves, TouchDirection } from './App-model';
+import { TTile, IBoardProps, IBoardStates, KeyBoardKeys, TNextMoves, TouchDirection, TMovements } from './App-model';
 import Tile from './Tile';
 import './Board.scss';
 
@@ -16,6 +16,14 @@ class Board extends Component<IBoardProps, IBoardStates> {
         startTime: 0,
         allowedTime: 1000
     }
+
+    private _movements: TMovements = {
+        left: [],
+        right: [],
+        up: [],
+        down: []
+    }
+
     constructor(props: IBoardProps) {
         super(props);
         this.state = {
@@ -179,6 +187,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     private moveTilesHelperLeft = (board: TTile[][]): TTile[][] => {
         const newBoard = JSON.parse(JSON.stringify(board));
+        this._movements.left = [];
         for(let row_idx = 0; row_idx < Board.BOARD_SIZE; row_idx++){           
             for(let i = 1, j = 0; i < Board.BOARD_SIZE; i++) {
                 if(newBoard[row_idx][i].val === 0) {
@@ -188,11 +197,23 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 if(newBoard[row_idx][j].val === 0) {
                     newBoard[row_idx][j].val = newBoard[row_idx][i].val;
                     newBoard[row_idx][i].val = 0;
+                    this._movements.left.push({
+                        oldX: row_idx,
+                        oldY: i,
+                        newX: row_idx,
+                        newY: j
+                    });
                     continue;
                 }
                 if(newBoard[row_idx][j].val === newBoard[row_idx][i].val) {
                     newBoard[row_idx][j].val = newBoard[row_idx][j].val * 2;
                     newBoard[row_idx][i].val = 0;
+                    this._movements.left.push({
+                        oldX: row_idx,
+                        oldY: i,
+                        newX: row_idx,
+                        newY: j
+                    });
                     continue;
                 }
                 if(newBoard[row_idx][j].val !== newBoard[row_idx][i].val) {
@@ -202,16 +223,24 @@ class Board extends Component<IBoardProps, IBoardStates> {
                     } else {
                         newBoard[row_idx][j].val = newBoard[row_idx][i].val;
                         newBoard[row_idx][i].val = 0;
+                        this._movements.left.push({
+                            oldX: row_idx,
+                            oldY: i,
+                            newX: row_idx,
+                            newY: j
+                        });
                         continue;
                     }
                 }
             }
         }
+        console.log(this._movements);
         return newBoard;
     }
 
     private moveTilesHelperRight = (board: TTile[][]): TTile[][] => {
         const newBoard = JSON.parse(JSON.stringify(board));
+        this._movements.right = [];
         for(let row_idx = 0; row_idx < Board.BOARD_SIZE; row_idx++){           
             for(let i = Board.BOARD_SIZE - 2, j = Board.BOARD_SIZE -1; i >= 0; i--) {
                 if(newBoard[row_idx][i].val === 0) {
@@ -221,11 +250,23 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 if(newBoard[row_idx][j].val === 0) {
                     newBoard[row_idx][j].val = newBoard[row_idx][i].val;
                     newBoard[row_idx][i].val = 0;
+                    this._movements.right.push({
+                        oldX: row_idx,
+                        oldY: i,
+                        newX: row_idx,
+                        newY: j
+                    });
                     continue;
                 }
                 if(newBoard[row_idx][j].val === newBoard[row_idx][i].val) {
                     newBoard[row_idx][j].val = newBoard[row_idx][j].val * 2;
                     newBoard[row_idx][i].val = 0;
+                    this._movements.right.push({
+                        oldX: row_idx,
+                        oldY: i,
+                        newX: row_idx,
+                        newY: j
+                    });
                     continue;
                 }
                 if(newBoard[row_idx][j].val !== newBoard[row_idx][i].val) {
@@ -235,6 +276,12 @@ class Board extends Component<IBoardProps, IBoardStates> {
                     } else {
                         newBoard[row_idx][j].val = newBoard[row_idx][i].val;
                         newBoard[row_idx][i].val = 0;
+                        this._movements.right.push({
+                            oldX: row_idx,
+                            oldY: i,
+                            newX: row_idx,
+                            newY: j
+                        });
                         continue;
                     }
                 }
@@ -245,6 +292,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     private moveTilesHelperUp = (board: TTile[][]): TTile[][] => {
         const newBoard = JSON.parse(JSON.stringify(board));
+        this._movements.up = [];
         for(let col_idx = 0; col_idx < Board.BOARD_SIZE; col_idx++){           
             for(let i = 1, j = 0; i < Board.BOARD_SIZE; i++) {
                 if(newBoard[i][col_idx].val === 0) {
@@ -254,11 +302,23 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 if(newBoard[j][col_idx].val === 0) {
                     newBoard[j][col_idx].val = newBoard[i][col_idx].val;
                     newBoard[i][col_idx].val = 0;
+                    this._movements.up.push({
+                        oldX: i,
+                        oldY: col_idx,
+                        newX: j,
+                        newY: col_idx
+                    });
                     continue;
                 }
                 if(newBoard[j][col_idx].val === newBoard[i][col_idx].val) {
                     newBoard[j][col_idx].val = newBoard[j][col_idx].val * 2;
                     newBoard[i][col_idx].val = 0;
+                    this._movements.up.push({
+                        oldX: i,
+                        oldY: col_idx,
+                        newX: j,
+                        newY: col_idx
+                    });
                     continue;
                 }
                 if(newBoard[j][col_idx].val !== newBoard[i][col_idx].val) {
@@ -268,6 +328,12 @@ class Board extends Component<IBoardProps, IBoardStates> {
                     } else {
                         newBoard[j][col_idx].val = newBoard[i][col_idx].val;
                         newBoard[i][col_idx].val = 0;
+                        this._movements.up.push({
+                            oldX: i,
+                            oldY: col_idx,
+                            newX: j,
+                            newY: col_idx
+                        });
                         continue;
                     }
                 }
@@ -278,6 +344,7 @@ class Board extends Component<IBoardProps, IBoardStates> {
 
     private moveTilesHelperDown = (board: TTile[][]): TTile[][] => {
         const newBoard = JSON.parse(JSON.stringify(board));
+        this._movements.down = [];
         for(let col_idx = 0; col_idx < Board.BOARD_SIZE; col_idx++){           
             for(let i = Board.BOARD_SIZE - 2, j = Board.BOARD_SIZE -1; i >= 0; i--) {
                 if(newBoard[i][col_idx].val === 0) {
@@ -287,11 +354,23 @@ class Board extends Component<IBoardProps, IBoardStates> {
                 if(newBoard[j][col_idx].val === 0) {
                     newBoard[j][col_idx].val = newBoard[i][col_idx].val;
                     newBoard[i][col_idx].val = 0;
+                    this._movements.down.push({
+                        oldX: i,
+                        oldY: col_idx,
+                        newX: j,
+                        newY: col_idx
+                    });
                     continue;
                 }
                 if(newBoard[j][col_idx].val === newBoard[i][col_idx].val) {
                     newBoard[j][col_idx].val = newBoard[j][col_idx].val * 2;
                     newBoard[i][col_idx].val = 0;
+                    this._movements.down.push({
+                        oldX: i,
+                        oldY: col_idx,
+                        newX: j,
+                        newY: col_idx
+                    });
                     continue;
                 }
                 if(newBoard[j][col_idx].val !== newBoard[i][col_idx].val) {
@@ -301,6 +380,12 @@ class Board extends Component<IBoardProps, IBoardStates> {
                     } else {
                         newBoard[j][col_idx].val = newBoard[i][col_idx].val;
                         newBoard[i][col_idx].val = 0;
+                        this._movements.down.push({
+                            oldX: i,
+                            oldY: col_idx,
+                            newX: j,
+                            newY: col_idx
+                        });
                         continue;
                     }
                 }
@@ -372,7 +457,10 @@ class Board extends Component<IBoardProps, IBoardStates> {
     }
 
     private touchHandler = (direction: string) => {
-        if(this.state.isGameFinished && direction !== '') {
+        if(direction === '') {
+            return;
+        }
+        if(this.state.isGameFinished) {
             alert(`${this.state.didLose ? 'You Lose, try again' : 'You Won!'}`);
             return;
         }
